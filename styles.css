@@ -299,6 +299,37 @@ body {
 }
 /* ================= MOBILE STYLES ================= */
 @media (max-width: 768px) {
+    /* Make quick-tabs horizontal on mobile */
+.quick-tabs {
+    display: flex;
+    overflow-x: auto;        /* allow horizontal scroll if needed */
+    gap: 8px;                /* space between buttons */
+    padding: 8px 0;
+    scrollbar-width: none;   /* hide scrollbar in Firefox */
+}
+.quick-tabs::-webkit-scrollbar {
+    display: none;           /* hide scrollbar in Chrome/Safari */
+}
+
+/* Make buttons flexible but not too wide */
+.quick-tabs button {
+    flex: 0 0 auto;          /* keep natural width, do not wrap */
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    background-color: #003366;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;     /* prevent text from wrapping */
+    transition: background 0.2s;
+}
+
+.quick-tabs button:hover,
+.quick-tabs button.active {
+    background-color: #ffcc00;
+    color: #003366;
+}
     /* Hide desktop header only */
     .university-header {
         display: none;
