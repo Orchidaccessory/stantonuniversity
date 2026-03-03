@@ -23,15 +23,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const hamburgerBtn = document.getElementById("hamburgerBtn");
     const workshopsToggle = document.getElementById("workshopsToggle");
     const workshopFilters = document.getElementById("workshopFilters");
-    const filterOptions = document.querySelectorAll(".filter-option");
+    const filterOptions = Array.from(document.querySelectorAll(".filter-option"));
+    const eventsContainer = document.getElementById("eventsContainer");
     const eventCards = Array.from(document.querySelectorAll("#eventsContainer .card"));
     const calendarBtn = document.getElementById("calendarBtn");
     const calendarPopup = document.getElementById("calendarPopup");
     const calendarGrid = document.getElementById("calendarGrid");
 
-    // Sort events by date ascending
+    // Sort events by date ascending and re-render cards in chronological order
     eventCards.sort((a, b) => new Date(a.dataset.date) - new Date(b.dataset.date));
-    eventCards.forEach((card) => document.getElementById("eventsContainer").appendChild(card));
+    eventCards.forEach((card) => eventsContainer.appendChild(card));
+
+    let activeFilter = "all";
+
+    function renderVisibleEvents() {
+        let shown = 0;
+        eventCards.forEach((card) => {
+            const matchesFilter = activeFilter === "all" || card.dataset.category === activeFilter;
+            const shouldShow = matchesFilter && shown < 3;
+            card.classList.toggle("hidden", !shouldShow);
+
+            if (matchesFilter) {
+                shown += 1;
+            }
+        });
+    }
+
+    renderVisibleEvents();
 
     // Mobile hamburger interactions
     hamburgerBtn.addEventListener("click", () => {
@@ -41,25 +59,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Workshop dropdown toggle
-    workshopsToggle.addEventListener("click", () => {
+    workshopsToggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         const expanded = workshopsToggle.getAttribute("aria-expanded") === "true";
         workshopsToggle.setAttribute("aria-expanded", String(!expanded));
-        workshopFilters.classList.toggle("open");
+        workshopFilters.classList.toggle("open", !expanded);
     });
 
     // Category filter for event cards
     filterOptions.forEach((option) => {
-        option.addEventListener("click", () => {
+        option.addEventListener("click", (event) => {
+            event.preventDefault();
             const filter = option.dataset.filter;
+            activeFilter = filter;
 
-            filterOptions.forEach((btn) => btn.classList.remove("active"));
-            option.classList.add("active");
-
-            eventCards.forEach((card) => {
-                const category = card.dataset.category;
-                const shouldShow = filter === "all" || category === filter;
-                card.classList.toggle("hidden", !shouldShow);
+            filterOptions.forEach((btn) => {
+                const isActive = btn === option;
+                btn.classList.toggle("active", isActive);
+                btn.setAttribute("aria-checked", String(isActive));
             });
+
+            renderVisibleEvents();
 
             workshopFilters.classList.remove("open");
             workshopsToggle.setAttribute("aria-expanded", "false");
@@ -94,9 +115,13 @@ document.addEventListener("DOMContentLoaded", () => {
         calendarGrid.appendChild(btn);
     }
 
-    calendarBtn.addEventListener("click", () => {
-        calendarPopup.classList.toggle("open");
-        calendarPopup.setAttribute("aria-hidden", String(!calendarPopup.classList.contains("open")));
+    // Calendar popup toggle
+    calendarBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const opening = !calendarPopup.classList.contains("open");
+        calendarPopup.classList.toggle("open", opening);
+        calendarPopup.setAttribute("aria-hidden", String(!opening));
     });
 
     // Form submit feedback
@@ -119,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
             workshopsToggle.setAttribute("aria-expanded", "false");
         }
 
-        if (!calendarPopup.contains(event.target) && event.target !== calendarBtn) {
+        if (!calendarPopup.contains(event.target) && !calendarBtn.contains(event.target)) {
             calendarPopup.classList.remove("open");
             calendarPopup.setAttribute("aria-hidden", "true");
         }

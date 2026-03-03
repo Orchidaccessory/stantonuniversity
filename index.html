@@ -46,21 +46,18 @@
 <!-- ================= TOGGLE SECTION ================= -->
 <div class="toggle-section">
     <div class="quick-tabs">
-        <button type="button">Today</button>
-        <button type="button">This Week</button>
         <div class="dropdown-wrap">
             <button type="button" id="workshopsToggle" class="dropdown-toggle" aria-expanded="false" aria-controls="workshopFilters">
                 Workshops <span class="arrow">▾</span>
             </button>
-            <div class="dropdown-menu" id="workshopFilters" role="menu">
-                <button type="button" class="filter-option active" data-filter="all">All Workshops</button>
-                <button type="button" class="filter-option" data-filter="Career">Career</button>
-                <button type="button" class="filter-option" data-filter="Cultural">Cultural</button>
-                <button type="button" class="filter-option" data-filter="Technology">Technology</button>
-                <button type="button" class="filter-option" data-filter="Business">Business</button>
+            <div class="dropdown-menu" id="workshopFilters" role="menu" aria-label="Workshop categories">
+                <button type="button" class="filter-option active" data-filter="all" role="menuitemradio" aria-checked="true">All Workshops</button>
+                <button type="button" class="filter-option" data-filter="Career" role="menuitemradio" aria-checked="false">Career</button>
+                <button type="button" class="filter-option" data-filter="Cultural" role="menuitemradio" aria-checked="false">Cultural</button>
+                <button type="button" class="filter-option" data-filter="Technology" role="menuitemradio" aria-checked="false">Technology</button>
+                <button type="button" class="filter-option" data-filter="Business" role="menuitemradio" aria-checked="false">Business</button>
             </div>
         </div>
-        <button type="button">Clubs</button>
     </div>
 
     <div class="status-tabs">
