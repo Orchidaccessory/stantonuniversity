@@ -6,139 +6,177 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
 
 <!-- ================= HEADER ================= -->
-
-<header class="university-header">
-
+<header class="university-header" aria-label="Main Header">
     <div class="top-bar">
         <div class="logo">Stanton University</div>
 
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNav">
+            <span></span><span></span><span></span>
+        </button>
+
         <div class="search-wrapper">
-            <span class="search-icon" onclick="toggleSearch()">🔍</span>
-            <input type="text" id="searchInput" placeholder="Search events...">
+            <button class="search-icon" onclick="toggleSearch()" aria-label="Toggle search">🔍</button>
+            <input type="text" id="searchInput" placeholder="Search events..." aria-label="Search events">
         </div>
     </div>
 
-    <nav class="main-nav">
-        <a href="#">Home</a>
-        <a href="#">Admissions</a>
-        <a href="#">Academics</a>
-        <a href="#">Student Services</a>
-        <a href="#">About</a>
-        <a href="#">Athletics</a>
-        <a href="#">Contact Us</a>
-        <a href="#">Donate</a>
+    <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
+        <a href="https://stanton.edu/">Home</a>
+        <a href="https://stanton.edu/admissions/">Admissions</a>
+        <a href="https://stanton.edu/academics/">Academics</a>
+        <a href="https://stanton.edu/student-services/">Student Services</a>
+        <a href="https://stanton.edu/about-us/">About</a>
+        <a href="https://stanton.edu/athletics/">Athletics</a>
+        <a href="https://stanton.edu/contact-us/">Contact Us</a>
+        <a href="https://stanton.edu/donate/">Donate</a>
     </nav>
-
 </header>
 
 <!-- ================= HERO ================= -->
-
-<section class="hero">
-    <div class="hero-content">
+<section class="hero" aria-label="Hero section">
+    <div class="hero-content fade-in">
         <h1>Co-curricular and Extra-curricular Events</h1>
-        <p>Discover workshops, clubs, and campus activities</p>
+        <p>Discover workshops, clubs, and campus activities designed to elevate your university experience.</p>
     </div>
 </section>
 
 <!-- ================= TOGGLE SECTION ================= -->
-
 <div class="toggle-section">
-
     <div class="quick-tabs">
-        <button>Today</button>
-        <button>This Week</button>
-        <button>Workshops</button>
-        <button>Clubs</button>
+        <button type="button">Today</button>
+        <button type="button">This Week</button>
+        <div class="dropdown-wrap">
+            <button type="button" id="workshopsToggle" class="dropdown-toggle" aria-expanded="false" aria-controls="workshopFilters">
+                Workshops <span class="arrow">▾</span>
+            </button>
+            <div class="dropdown-menu" id="workshopFilters" role="menu">
+                <button type="button" class="filter-option active" data-filter="all">All Workshops</button>
+                <button type="button" class="filter-option" data-filter="Career">Career</button>
+                <button type="button" class="filter-option" data-filter="Cultural">Cultural</button>
+                <button type="button" class="filter-option" data-filter="Technology">Technology</button>
+                <button type="button" class="filter-option" data-filter="Business">Business</button>
+            </div>
+        </div>
+        <button type="button">Clubs</button>
     </div>
 
     <div class="status-tabs">
-        <button class="toggle-btn active">Upcoming</button>
-
-        <a href="https://stanton.edu/activities-and-events/"
-           target="_blank"
-           class="toggle-btn link-btn">
-           Past Events
-        </a>
+        <button class="toggle-btn active" type="button">Upcoming</button>
+        <a href="https://stanton.edu/activities-and-events/" class="toggle-btn link-btn">Past Events</a>
     </div>
-
 </div>
 
 <!-- ================= EVENTS GRID ================= -->
-
-<section class="events" id="eventsContainer">
-
-    <div class="card" data-date="2026-04-10">
-        <img src="https://stanton.edu/wp-content/uploads/Screenshot-2025-11-18-004310-1024x545.png">
+<section class="events" id="eventsContainer" aria-live="polite">
+    <div class="card" data-date="2026-04-10" data-category="Business" data-status="available">
+        <img src="https://stanton.edu/wp-content/uploads/Screenshot-2025-11-18-004310-1024x545.png" alt="Students networking at business center event">
         <div class="card-body">
             <h3>Networking Night</h3>
-            <p>April 10, 2026 | Business Center</p>
-            <span class="tag">Career</span>
-            <button class="primary-btn" onclick="openModal()">Register Now</button>
+            <p>April 10, 2026</p>
+            <p>Business Center</p>
+            <span class="tag">Business</span>
+            <div class="card-actions">
+                <button class="primary-btn" onclick="openModal()">Register Now</button>
+                <span class="status-badge available">🟢 Available</span>
+            </div>
         </div>
     </div>
 
-    <div class="card" data-date="2026-05-20">
-        <img src="https://stanton.edu/wp-content/uploads/2-1-1-1024x576.jpg">
+    <div class="card" data-date="2026-05-20" data-category="Career" data-status="available">
+        <img src="https://stanton.edu/wp-content/uploads/2-1-1-1024x576.jpg" alt="Students attending leadership workshop">
         <div class="card-body">
             <h3>Leadership Workshop</h3>
-            <p>May 20, 2026 | 4PM | Room 101</p>
+            <p>May 20, 2026</p>
+            <p>4:00 PM • Room 101</p>
             <span class="tag">Career</span>
-            <button class="primary-btn" onclick="openModal()">Register Now</button>
+            <div class="card-actions">
+                <button class="primary-btn" onclick="openModal()">Register Now</button>
+                <span class="status-badge available">🟢 Available</span>
+            </div>
         </div>
     </div>
 
-    <div class="card" data-date="2026-06-05">
-        <img src="https://stanton.edu/wp-content/uploads/IMG_2796-1024x768.jpg">
+    <div class="card" data-date="2026-06-05" data-category="Cultural" data-status="full">
+        <img src="https://stanton.edu/wp-content/uploads/IMG_2796-1024x768.jpg" alt="Students participating in cultural festival">
         <div class="card-body">
             <h3>Cultural Festival</h3>
-            <p>June 5, 2026 | Campus Lawn</p>
+            <p>June 5, 2026</p>
+            <p>Campus Lawn</p>
             <span class="tag">Cultural</span>
-            <button class="primary-btn" onclick="openModal()">Register Now</button>
+            <div class="card-actions">
+                <button class="primary-btn disabled" disabled aria-disabled="true">Register Now</button>
+                <span class="status-badge full">🔴 Fully Booked</span>
+            </div>
         </div>
     </div>
 
+    <div class="card" data-date="2026-06-18" data-category="Technology" data-status="available">
+        <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80" alt="Students attending technology innovation event">
+        <div class="card-body">
+            <h3>Innovation Sprint Lab</h3>
+            <p>June 18, 2026</p>
+            <p>Tech Hub Auditorium</p>
+            <span class="tag">Technology</span>
+            <div class="card-actions">
+                <button class="primary-btn" onclick="openModal()">Register Now</button>
+                <span class="status-badge available">🟢 Available</span>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- ================= RECOMMENDED ================= -->
-
-<section class="recommended">
+<section class="recommended" aria-label="Recommended events">
     <h2>Recommended For You</h2>
+    <div class="recommended-grid">
+        <article class="mini-card">
+            <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=900&q=80" alt="AI seminar audience">
+            <div class="mini-card-body">
+                <h4>AI Seminar</h4>
+                <p>Learn practical AI tools, ethical frameworks, and emerging trends to support your academic and career growth.</p>
+                <button type="button" class="secondary-btn">Learn More</button>
+            </div>
+        </article>
 
-    <div class="recommended-scroll">
-        <div class="mini-card">
-            <h4>AI Seminar</h4>
-            <p>Technology</p>
-        </div>
-
-        <div class="mini-card">
-            <h4>Entrepreneur Meetup</h4>
-            <p>Business</p>
-        </div>
+        <article class="mini-card">
+            <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80" alt="Students at entrepreneur meetup">
+            <div class="mini-card-body">
+                <h4>Entrepreneur Meetup</h4>
+                <p>Meet founders and mentors, build your startup network, and discover funding paths for student-led ventures.</p>
+                <button type="button" class="secondary-btn">Learn More</button>
+            </div>
+        </article>
     </div>
 </section>
 
-<button class="calendar-btn">📅</button>
+<button class="calendar-btn" id="calendarBtn" aria-label="Open event calendar">📅</button>
+
+<!-- Lightweight calendar popup -->
+<div class="calendar-popup" id="calendarPopup" aria-hidden="true">
+    <div class="calendar-head">
+        <h4>April 2026</h4>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+</div>
 
 <!-- ================= MODAL ================= -->
-
-<div id="registerModal" class="modal">
+<div id="registerModal" class="modal" aria-hidden="true">
     <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <span class="close-btn" onclick="closeModal()" aria-label="Close registration modal">&times;</span>
 
         <h2>Event Registration</h2>
 
         <form id="registrationForm">
-            <label>Full Name *</label>
+            <label for="name">Full Name *</label>
             <input type="text" id="name" required>
 
-            <label>Email *</label>
+            <label for="email">Email *</label>
             <input type="email" id="email" required>
 
-            <label>Phone (Optional)</label>
+            <label for="phone">Phone (Optional)</label>
             <input type="tel" id="phone">
 
             <button type="submit" class="primary-btn">Done</button>
@@ -148,55 +186,6 @@
     </div>
 </div>
 
-<!-- ================= JAVASCRIPT ================= -->
-
-<script>
-
-// Toggle Search
-function toggleSearch() {
-    document.getElementById("searchInput").classList.toggle("active");
-}
-
-// Sort Events by Date (Upcoming First)
-document.addEventListener("DOMContentLoaded", function () {
-    const container = document.getElementById("eventsContainer");
-    const cards = Array.from(container.getElementsByClassName("card"));
-
-    cards.sort((a, b) => {
-        return new Date(a.dataset.date) - new Date(b.dataset.date);
-    });
-
-    cards.forEach(card => container.appendChild(card));
-});
-
-// Modal
-function openModal() {
-    document.getElementById("registerModal").style.display = "block";
-}
-
-function closeModal() {
-    document.getElementById("registerModal").style.display = "none";
-    document.getElementById("confirmationMessage").innerText = "";
-    document.getElementById("registrationForm").reset();
-}
-
-// Form Submit
-document.getElementById("registrationForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const email = document.getElementById("email").value;
-    document.getElementById("confirmationMessage").innerText =
-        "Confirmation email has been sent to " + email + "!";
-});
-
-// Close Modal if click outside
-window.onclick = function(event) {
-    const modal = document.getElementById("registerModal");
-    if (event.target === modal) {
-        closeModal();
-    }
-}
-
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
