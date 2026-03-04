@@ -18,6 +18,301 @@ function closeModal() {
     document.getElementById("registrationForm").reset();
 }
 
+/**
+ * Calendar feature module.
+ * Keeps all calendar behavior scoped and independent from other UI controls.
+ */
+function createCalendarModule(config) {
+    const {
+        calendarBtn,
+        calendarPopup,
+        calendarGrid,
+        calendarMonthLabel,
+        calendarPreview,
+        prevMonthBtn,
+        nextMonthBtn,
+        eventCards
+    } = config;
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const eventsByDate = extractEvents(eventCards);
+    const eventDates = Array.from(eventsByDate.keys()).sort();
+
+    let viewDate = eventDates.length > 0 ? new Date(`${eventDates[0]}T00:00:00`) : new Date();
+    let focusedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    let selectedDateKey = "";
+
+    function extractEvents(cards) {
+        const eventMap = new Map();
+
+        cards.forEach((card) => {
+            const body = card.querySelector(".card-body");
+            if (!body) return;
+
+            const title = body.querySelector("h3")?.textContent.trim() || "Untitled Event";
+            const details = Array.from(body.querySelectorAll("p"));
+            const rawDateText = details[0]?.textContent.trim() || "";
+            const infoLine = details[1]?.textContent.trim() || "";
+
+            const parsedDate = parseDateText(rawDateText, card.dataset.date);
+            if (!parsedDate) return;
+
+            const { time, location } = parseInfoLine(infoLine);
+            const dateKey = formatDateKey(parsedDate);
+
+            const eventItem = {
+                date: dateKey,
+                title,
+                time,
+                location
+            };
+
+            if (!eventMap.has(dateKey)) {
+                eventMap.set(dateKey, []);
+            }
+            eventMap.get(dateKey).push(eventItem);
+        });
+
+        return eventMap;
+    }
+
+    function parseDateText(rawText, fallbackIso) {
+        const parsed = new Date(rawText);
+        if (!Number.isNaN(parsed.getTime())) {
+            return parsed;
+        }
+
+        if (fallbackIso) {
+            const fallbackDate = new Date(`${fallbackIso}T00:00:00`);
+            if (!Number.isNaN(fallbackDate.getTime())) {
+                return fallbackDate;
+            }
+        }
+
+        return null;
+    }
+
+    function parseInfoLine(line) {
+        if (!line) {
+            return { time: "TBA", location: "Location TBA" };
+        }
+
+        const timeMatch = line.match(/(\b\d{1,2}:\d{2}\s?(?:AM|PM)\b)/i);
+        const time = timeMatch ? timeMatch[0].replace(/\s+/g, " ").toUpperCase() : "TBA";
+
+        const location = line.includes("•")
+            ? line.split("•").slice(1).join("•").trim() || "Location TBA"
+            : timeMatch
+                ? line.replace(timeMatch[0], "").replace(/[•\-–]/g, "").trim() || "Location TBA"
+                : line;
+
+        return { time, location };
+    }
+
+    function formatDateKey(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    }
+
+    function getMonthMeta(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        return { year, month, firstDayIndex, totalDays };
+    }
+
+    function renderCalendar() {
+        const { year, month, firstDayIndex, totalDays } = getMonthMeta(viewDate);
+        calendarMonthLabel.textContent = `${monthNames[month]} ${year}`;
+        calendarGrid.innerHTML = "";
+
+        for (let i = 0; i < firstDayIndex; i += 1) {
+            const spacer = document.createElement("span");
+            spacer.className = "calendar-spacer";
+            spacer.setAttribute("aria-hidden", "true");
+            calendarGrid.appendChild(spacer);
+        }
+
+        for (let day = 1; day <= totalDays; day += 1) {
+            const dateObj = new Date(year, month, day);
+            const dateKey = formatDateKey(dateObj);
+            const events = eventsByDate.get(dateKey) || [];
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "calendar-date";
+            button.dataset.date = dateKey;
+            button.textContent = String(day);
+            button.setAttribute("tabindex", dateObj.getTime() === focusedDate.getTime() ? "0" : "-1");
+            button.setAttribute("aria-label", `${dateKey}${events.length ? `, ${events.length} event${events.length > 1 ? "s" : ""}` : ", no events"}`);
+
+            if (events.length > 0) {
+                button.classList.add("event-day");
+                button.dataset.eventsCount = String(events.length);
+                button.title = `${events.length} Event${events.length > 1 ? "s" : ""}`;
+            }
+
+            if (dateKey === selectedDateKey) {
+                button.classList.add("selected");
+            }
+
+            button.addEventListener("click", () => {
+                selectDate(dateObj);
+            });
+
+            button.addEventListener("focus", () => {
+                focusedDate = dateObj;
+            });
+
+            calendarGrid.appendChild(button);
+        }
+    }
+
+    function renderPreview(dateKey) {
+        const events = eventsByDate.get(dateKey) || [];
+
+        if (events.length === 0) {
+            calendarPreview.innerHTML = '<p class="empty-state">No events scheduled.</p>';
+            calendarPreview.classList.add("visible");
+            return;
+        }
+
+        const cardsMarkup = events
+            .map((eventItem) => `
+                <article class="preview-event-item">
+                    <h5>${eventItem.title}</h5>
+                    <p><strong>Time:</strong> ${eventItem.time}</p>
+                    <p><strong>Location:</strong> ${eventItem.location}</p>
+                </article>
+            `)
+            .join("");
+
+        calendarPreview.innerHTML = `
+            <div class="preview-heading">${events.length} Event${events.length > 1 ? "s" : ""}</div>
+            <div class="preview-list">${cardsMarkup}</div>
+        `;
+
+        calendarPreview.classList.add("visible");
+    }
+
+    function selectDate(dateObj) {
+        selectedDateKey = formatDateKey(dateObj);
+        focusedDate = dateObj;
+        renderCalendar();
+        renderPreview(selectedDateKey);
+
+        const selectedBtn = calendarGrid.querySelector(`.calendar-date[data-date="${selectedDateKey}"]`);
+        if (selectedBtn) {
+            selectedBtn.focus();
+        }
+    }
+
+    function shiftFocusByDays(step) {
+        const nextDate = new Date(focusedDate);
+        nextDate.setDate(nextDate.getDate() + step);
+        focusedDate = nextDate;
+
+        if (
+            nextDate.getMonth() !== viewDate.getMonth() ||
+            nextDate.getFullYear() !== viewDate.getFullYear()
+        ) {
+            viewDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
+            renderCalendar();
+        }
+
+        const focusKey = formatDateKey(nextDate);
+        const btn = calendarGrid.querySelector(`.calendar-date[data-date="${focusKey}"]`);
+        if (btn) {
+            calendarGrid.querySelectorAll(".calendar-date").forEach((node) => node.setAttribute("tabindex", "-1"));
+            btn.setAttribute("tabindex", "0");
+            btn.focus();
+        }
+    }
+
+    function changeMonth(step) {
+        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + step, 1);
+        focusedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+        renderCalendar();
+    }
+
+    function toggleCalendar(forceOpen) {
+        const shouldOpen = typeof forceOpen === "boolean"
+            ? forceOpen
+            : !calendarPopup.classList.contains("open");
+
+        calendarPopup.classList.toggle("open", shouldOpen);
+        calendarPopup.setAttribute("aria-hidden", String(!shouldOpen));
+        calendarBtn.setAttribute("aria-expanded", String(shouldOpen));
+        document.body.classList.toggle("calendar-open", shouldOpen);
+
+        if (shouldOpen) {
+            renderCalendar();
+        } else {
+            calendarPreview.classList.remove("visible");
+            calendarPreview.innerHTML = '<p class="empty-state">Select a date to view event details.</p>';
+        }
+    }
+
+    function initialize() {
+        renderCalendar();
+
+        calendarBtn.setAttribute("aria-expanded", "false");
+
+        calendarBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleCalendar();
+        });
+
+        prevMonthBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            changeMonth(-1);
+        });
+
+        nextMonthBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            changeMonth(1);
+        });
+
+        calendarPopup.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                shiftFocusByDays(-1);
+            } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                shiftFocusByDays(1);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                shiftFocusByDays(-7);
+            } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                shiftFocusByDays(7);
+            } else if (event.key === "Enter") {
+                event.preventDefault();
+                selectDate(focusedDate);
+            } else if (event.key === "Escape") {
+                toggleCalendar(false);
+            }
+        });
+
+        return {
+            close: () => toggleCalendar(false),
+            isOpen: () => calendarPopup.classList.contains("open")
+        };
+    }
+
+    return {
+        initialize
+    };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const nav = document.getElementById("mainNav");
     const hamburgerBtn = document.getElementById("hamburgerBtn");
@@ -26,9 +321,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterOptions = Array.from(document.querySelectorAll(".filter-option"));
     const eventsContainer = document.getElementById("eventsContainer");
     const eventCards = Array.from(document.querySelectorAll("#eventsContainer .card"));
-    const calendarBtn = document.getElementById("calendarBtn");
-    const calendarPopup = document.getElementById("calendarPopup");
-    const calendarGrid = document.getElementById("calendarGrid");
 
     // Sort events by date ascending and re-render cards in chronological order
     eventCards.sort((a, b) => new Date(a.dataset.date) - new Date(b.dataset.date));
@@ -87,42 +379,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Build simple popup calendar and mark dates with events
-    const eventDateSet = new Set(eventCards.map((card) => card.dataset.date));
-    const year = 2026;
-    const month = 3; // April (0-indexed)
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "calendar-date";
-        btn.textContent = String(day);
-
-        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        if (eventDateSet.has(dateStr)) {
-            btn.classList.add("event-day");
-            btn.setAttribute("aria-label", `${dateStr} has events`);
-        } else {
-            btn.setAttribute("aria-label", dateStr);
-        }
-
-        btn.addEventListener("click", () => {
-            calendarGrid.querySelectorAll(".calendar-date").forEach((node) => node.classList.remove("selected"));
-            btn.classList.add("selected");
-        });
-
-        calendarGrid.appendChild(btn);
-    }
-
-    // Calendar popup toggle
-    calendarBtn.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const opening = !calendarPopup.classList.contains("open");
-        calendarPopup.classList.toggle("open", opening);
-        calendarPopup.setAttribute("aria-hidden", String(!opening));
-    });
+    // Initialize dynamic calendar system
+    const calendarModule = createCalendarModule({
+        calendarBtn: document.getElementById("calendarBtn"),
+        calendarPopup: document.getElementById("calendarPopup"),
+        calendarGrid: document.getElementById("calendarGrid"),
+        calendarMonthLabel: document.getElementById("calendarMonthLabel"),
+        calendarPreview: document.getElementById("calendarPreview"),
+        prevMonthBtn: document.getElementById("prevMonthBtn"),
+        nextMonthBtn: document.getElementById("nextMonthBtn"),
+        eventCards
+    }).initialize();
 
     // Form submit feedback
     document.getElementById("registrationForm").addEventListener("submit", (e) => {
@@ -144,9 +411,14 @@ document.addEventListener("DOMContentLoaded", () => {
             workshopsToggle.setAttribute("aria-expanded", "false");
         }
 
-        if (!calendarPopup.contains(event.target) && !calendarBtn.contains(event.target)) {
-            calendarPopup.classList.remove("open");
-            calendarPopup.setAttribute("aria-hidden", "true");
+        const calendarPopup = document.getElementById("calendarPopup");
+        const calendarBtn = document.getElementById("calendarBtn");
+        if (
+            calendarModule.isOpen() &&
+            !calendarPopup.contains(event.target) &&
+            !calendarBtn.contains(event.target)
+        ) {
+            calendarModule.close();
         }
     });
 });
