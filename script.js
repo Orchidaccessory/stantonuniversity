@@ -42,8 +42,10 @@ function createCalendarModule(config) {
     const eventsByDate = extractEvents(eventCards);
     const eventDates = Array.from(eventsByDate.keys()).sort();
 
-    let viewDate = eventDates.length > 0 ? new Date(`${eventDates[0]}T00:00:00`) : new Date();
-    let focusedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const initialDate = eventDates.length > 0 ? new Date(`${eventDates[0]}T00:00:00`) : new Date();
+    let currentMonth = initialDate.getMonth();
+    let currentYear = initialDate.getFullYear();
+    let focusedDate = new Date(currentYear, currentMonth, 1);
     let selectedDateKey = "";
 
     function extractEvents(cards) {
@@ -120,18 +122,25 @@ function createCalendarModule(config) {
         return `${y}-${m}-${d}`;
     }
 
-    function getMonthMeta(dateObj) {
-        const year = dateObj.getFullYear();
-        const month = dateObj.getMonth();
-        const firstDayIndex = new Date(year, month, 1).getDay();
+    function getMonthMeta(year, month) {
+        const firstDate = new Date(year, month, 1);
+        const firstDayIndex = (firstDate.getDay() + 6) % 7;
         const totalDays = new Date(year, month + 1, 0).getDate();
-        return { year, month, firstDayIndex, totalDays };
+        return { firstDayIndex, totalDays };
     }
 
-    function renderCalendar() {
-        const { year, month, firstDayIndex, totalDays } = getMonthMeta(viewDate);
-        calendarMonthLabel.textContent = `${monthNames[month]} ${year}`;
+    function renderCalendar(withTransition = false) {
+        const { firstDayIndex, totalDays } = getMonthMeta(currentYear, currentMonth);
+
+        calendarMonthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
         calendarGrid.innerHTML = "";
+
+        if (withTransition) {
+            calendarGrid.classList.add("is-changing");
+            window.setTimeout(() => {
+                calendarGrid.classList.remove("is-changing");
+            }, 180);
+        }
 
         for (let i = 0; i < firstDayIndex; i += 1) {
             const spacer = document.createElement("span");
@@ -141,7 +150,7 @@ function createCalendarModule(config) {
         }
 
         for (let day = 1; day <= totalDays; day += 1) {
-            const dateObj = new Date(year, month, day);
+            const dateObj = new Date(currentYear, currentMonth, day);
             const dateKey = formatDateKey(dateObj);
             const events = eventsByDate.get(dateKey) || [];
 
@@ -149,14 +158,23 @@ function createCalendarModule(config) {
             button.type = "button";
             button.className = "calendar-date";
             button.dataset.date = dateKey;
-            button.textContent = String(day);
             button.setAttribute("tabindex", dateObj.getTime() === focusedDate.getTime() ? "0" : "-1");
             button.setAttribute("aria-label", `${dateKey}${events.length ? `, ${events.length} event${events.length > 1 ? "s" : ""}` : ", no events"}`);
 
+            const dayLabel = document.createElement("span");
+            dayLabel.className = "day-number";
+            dayLabel.textContent = String(day);
+            button.appendChild(dayLabel);
+
             if (events.length > 0) {
-                button.classList.add("event-day");
+                button.classList.add("has-event");
                 button.dataset.eventsCount = String(events.length);
                 button.title = `${events.length} Event${events.length > 1 ? "s" : ""}`;
+
+                const dot = document.createElement("span");
+                dot.className = "event-dot";
+                dot.setAttribute("aria-hidden", "true");
+                button.appendChild(dot);
             }
 
             if (dateKey === selectedDateKey) {
@@ -220,11 +238,12 @@ function createCalendarModule(config) {
         focusedDate = nextDate;
 
         if (
-            nextDate.getMonth() !== viewDate.getMonth() ||
-            nextDate.getFullYear() !== viewDate.getFullYear()
+            nextDate.getMonth() !== currentMonth ||
+            nextDate.getFullYear() !== currentYear
         ) {
-            viewDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
-            renderCalendar();
+            currentMonth = nextDate.getMonth();
+            currentYear = nextDate.getFullYear();
+            renderCalendar(true);
         }
 
         const focusKey = formatDateKey(nextDate);
@@ -237,9 +256,18 @@ function createCalendarModule(config) {
     }
 
     function changeMonth(step) {
-        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + step, 1);
-        focusedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-        renderCalendar();
+        currentMonth += step;
+
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear += 1;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear -= 1;
+        }
+
+        focusedDate = new Date(currentYear, currentMonth, 1);
+        renderCalendar(true);
     }
 
     function toggleCalendar(forceOpen) {

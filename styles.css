@@ -497,6 +497,12 @@ body.calendar-open {
     grid-template-columns: repeat(7, 1fr);
     gap: 6px;
     margin-top: 8px;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.calendar-grid.is-changing {
+    opacity: 0.65;
+    transform: translateY(2px);
 }
 
 .calendar-spacer {
@@ -509,10 +515,14 @@ body.calendar-open {
     background: #f2f5f9;
     color: #1e2f4c;
     border-radius: 10px;
-    min-height: 36px;
+    min-height: 40px;
     cursor: pointer;
     font-size: 0.85rem;
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 7px;
 }
 
 .calendar-date:hover {
@@ -520,18 +530,21 @@ body.calendar-open {
     transform: translateY(-1px);
 }
 
-.calendar-date.event-day {
+.calendar-date.has-event {
     background: #eaf2ff;
     border-color: rgba(11, 46, 89, 0.24);
 }
 
-.calendar-date.event-day::after {
-    content: "";
+.day-number {
+    line-height: 1;
+}
+
+.event-dot {
     position: absolute;
     left: 50%;
-    bottom: 4px;
-    width: 6px;
-    height: 6px;
+    bottom: 5px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--su-gold);
     transform: translateX(-50%);
